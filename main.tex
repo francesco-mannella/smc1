@@ -6,8 +6,10 @@
 \usepackage[T1]{fontenc}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage[vlined,ruled]{algorithm2e}
 
 \DeclareMathOperator*{\argmin}{\operatorname*{arg\,min}} % Jan Hlavacek
+\DeclareMathOperator*{\argmax}{\operatorname*{arg\,max}} % Jan Hlavacek
 
 %% Sets page size and margins
 \usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
@@ -18,71 +20,446 @@
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 
-\title{SOM}
+\title{Using SOMs for the detection of sensorimotor contingencies.}
 \author{}
 
 \begin{document}
 \maketitle
+\pagebreak
+\section*{Self-Organizing Map - (SOM)}
+The SOM is a neural network that learns to map the n-dimensional space of the inputs to an arbitrary k-dimensional space in an unsupervised manner. 
+The idea behind SOMs is very similar to k.-mean clustering. As for k-mean clustering each output unit is a filter of the input that responds maximally to those input patterns that are closer to a particular vector of weights. This weight vector is the prototype of the related cluster. Differently from k-mean clustering the prototypes of a SOM have a further constraint: the must keep the euclidean distance from their neighborhood (prototypes that are nearby in the output layer) as small as possible.
+Thus SOM Optimization is based on a specialization of the k-means cost function. Only those weights prototypes that are currently the nearest to an input pattern (and their neighborhood) are recruited for optimization as in k-mean clustering,  but here recruitment is not a binary function. The update of each weight vector is modulated by the radial basis of the distance of the related output unit from the output unit which is the closest to the current input (the winner unit).   
 
-\section*{SOM}
 
 \begin{align}
-	&\emph{input} && \mathbf{x}_i &&\in\mathbb{R}^M \nonumber\\
-	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{t\times N} \nonumber\\
-	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_0,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{M \times K} \nonumber\\
-    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = e^{{-\gamma (j-k)^2}} && with\ \gamma=\frac{1}{2\sigma^2}\nonumber\\
+	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_1,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times M} \nonumber\\
+	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_1,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{K \times M} \nonumber\\
+     &\emph{winners}&&  r_{n,k} = 
+  k = \argmin_k ||\mathbf{x}_n - \mathbf{w}_k|| &&\nonumber\\
+    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = e^{{-\gamma (j-r_{n,k})^2}} && with\ \gamma=\frac{1}{2\sigma^2}\nonumber\\
     &&& \boldsymbol{\phi}_k = \{\phi_{0,k}, \dots\phi_{j,k}, \dots \phi_{K,k}\}^T && \in\mathbb{R}^{K}\nonumber\\
-    &&& \boldsymbol{\Phi} = \{\boldsymbol{\phi}_0, \dots\boldsymbol{\phi}_k, \dots \boldsymbol{\phi}_K\}^T && \in\mathbb{R}^{K\times K}\nonumber\\
-    &\emph{winners}&&  r_{nk} = 
-   \begin{cases}
-    1  & if\ k = \argmin_j ||\mathbf{x}_n - \mathbf{w}_j||\\
-    0  & otherwise
-  \end{cases} &&\nonumber\\
  	&\emph{cost function} && L(\mathbf{W}) = \frac{1}{2}\sum_n\sum_k \boldsymbol{\phi}_{k}||\mathbf{x}_n - \mathbf{w}_k||^2 &&   &&\nonumber\\
-    &\emph{gradient}&& \Delta{\mathbf{w}_{k,t}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_k} = \eta_e\boldsymbol{\phi}_{k}(\mathbf{x}_{t-1} - \mathbf{w}_{k, t-1}) &&\nonumber\\
-    &\emph{learning rate decay}&&  \eta_e = \eta_0e^{-t/(\alpha\cdot epochs)} &&\nonumber\\
-    &\emph{neighborhood decay}&&  \sigma_e = \sigma_0e^{-t/(\alpha\cdot epochs)} &&\nonumber   
+    &\emph{online gradient}&& \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_k} = \eta\sum_{n}{\boldsymbol{\phi}_{k}(\mathbf{x}_{n} -\mathbf{w}_{k})} &&\nonumber\\
+    &\emph{learning rate decay}&&  \eta = \eta_0e^{-t/(\alpha\cdot epochs)} &&\nonumber\\
+    &\emph{neighborhood decay}&&  \sigma = \sigma_0e^{-t/(\alpha\cdot epochs)} &&\nonumber   
 \end{align}
 
-\section*{Modulated SOM}
+\IncMargin{1em}
+\begin{algorithm}
+\SetAlgorithmName{Code}{Code}{Code}
+\DontPrintSemicolon
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, $\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, $\sigma$, $\eta$}    
+\KwOut{$\mathbf{W}\in\mathbb{R}^{K\times M}$}
+\SetKwFunction{UpdateSOM}{UpdateSOM}
+\SetKwProg{Fn}{Function}{:}{}
+\BlankLine
+\BlankLine
+\Fn{\UpdateSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, $K$, $\sigma$, $\eta$}}{
+	\BlankLine
+	$\gamma \leftarrow \frac{1}{2\sigma^2}$\tcp*[r]{Extension of the neighborhood}\;
+    \For{$n\leftarrow0$ \KwTo {$N$}}{
+    	\For{$k\leftarrow1$ \KwTo {$K$}}{
+            $r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$\tcp*[r]{Winning prototype}
+            \For{$j\leftarrow1$ \KwTo {$K$}}{
+                 $\phi_{j, k}\leftarrow exp(\gamma(j - r_{n})^2)$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Radial bases of distances from winner}}
+            }
+            $\mathbf{w}_k \leftarrow 
+            \mathbf{w}_k + \eta
+            \boldsymbol{\phi}_{k}(
+            \mathbf{x}_{n}-\mathbf{w}_{k})$\tcp*[r]{gradient descent}
+        }
+    }
+    \Return{$\mathbf{W}$}
+}
+\caption{Update a SOM}\label{som}
+\end{algorithm}
+\DecMargin{1em}
 
+\pagebreak
+\section*{Modulated Self-Organizing Map (MSOM)}
+     The idea of SOM can be further exploited by adding a further modulation to the update of the weight vectors. This further modulation acts independently of the main modulation relative to the distance of the unit from the winner. Thus we can add further constraints to the topology of the output units in the input space.
 \begin{align}
-	&\emph{input} && \mathbf{x}_i &&\in\mathbb{R}^M \nonumber\\
-	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{t\times N} \nonumber\\
-	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_0,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{M \times K} \nonumber\\
-    &\emph{winners}&&  r_{nk} = 
-   \begin{cases}
-    1  & if\ k = \argmin_j ||\mathbf{x}_n - \mathbf{w}_j||\\
-    0  & otherwise
-  \end{cases} &&\nonumber\\
-    &\emph{performance}&&\boldsymbol{\xi}\in\mathbb{R}^{K}&&\nonumber\\
-    &&&\overline{\xi} = \frac{\sum_k \xi_k}{K}&&\nonumber\\
-    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = \overline{\xi} e^{{-\gamma (j-k)^2}}&& with\ \gamma=\frac{1}{2{\xi_k}^2}\nonumber\\
+	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times M} \nonumber\\
+	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_0,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{K \times M} \nonumber\\
+ 	&\emph{winners}&&  r_{n,k} = 
+  k = \argmin_k ||\mathbf{x}_n - \mathbf{w}_k|| &&\nonumber\\
+    &\emph{modulation}&&\boldsymbol{\xi}\in\mathbb{R}^{K},\ \overline{\xi} = \frac{\sum_k \xi_k}{K}&&\nonumber\\
+    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = \overline{\xi}\,e^{{-\gamma (j- r_{n,k})^2}}&& with\ \gamma=\frac{1}{2{\xi_k}^2}\nonumber\\
     &&& \boldsymbol{\phi}_k = \{\phi_{0,k}, \dots\phi_{j,k}, \dots \phi_{K,k}\}^T && \in\mathbb{R}^{K}\nonumber\\
-    &&& \boldsymbol{\Phi} = \{\boldsymbol{\phi}_0, \dots\boldsymbol{\phi}_k, \dots \boldsymbol{\phi}_K\}^T && \in\mathbb{R}^{K\times K}\nonumber\\
     &\emph{cost function} && L(\mathbf{W}) = \frac{1}{2}\sum_n\sum_k \phi_{n,k}||\mathbf{x}_n - \mathbf{w}_k||^2  &&\nonumber\\
-    &\emph{gradient}&& \Delta{\mathbf{w}_{k,t}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_k} = \eta_e\boldsymbol{\phi}_{k}(\mathbf{x}_{t-1} - \mathbf{w}_{k, t-1}) &&\nonumber
+    &\emph{online gradient}&& \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_{k}} = \eta{\sum_{n}{\boldsymbol{\phi}_{k}(\mathbf{x}_n - \mathbf{w}_{k})}} &&\nonumber
 \end{align}
 
-\section*{Generating items from a modulated SOM}
+\IncMargin{1em}
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\SetAlgorithmName{Code}{Code}{Code}
+
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, $\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, $\boldsymbol{\xi}\in\mathbb{R}^K$, $\eta$}    
+\KwOut{$\mathbf{W}\in\mathbb{R}^{K\times M}$, $\mathbf{r}\in\mathbb{R}^{N}$}
+\SetKwFunction{UpdateMSOM}{UpdateMSOM}
+\SetKwProg{Fn}{Function}{:}{}
+\BlankLine
+\BlankLine
+\Fn{\UpdateMSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, $K$, $\boldsymbol{\xi}$, $\eta$}}{
+	\BlankLine
+	$\boldsymbol{\gamma} \leftarrow \frac{1}{2\boldsymbol{\xi}^2}$\tcp*[r]{Extension of the neighborhood}
+    $\overline{\xi} = \frac{\sum_k \xi_k}{K}$\tcp*[r]{Modulation mean}\;
+    \For{$n\leftarrow0$ \KwTo {$N$}}{
+    	\For{$k\leftarrow1$ \KwTo {$K$}}{
+            $r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$\tcp*[r]{Winning prototype}
+            \For{$j\leftarrow1$ \KwTo {$K$}}{
+                 $\phi_{j, k}\leftarrow \overline{\xi}\,exp(\gamma_k(j - r_{n})^2)$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Radial bases of distances from winner}}
+            }
+            $\mathbf{w}_k \leftarrow 
+            \mathbf{w}_k + \eta
+            \boldsymbol{\phi}_{k}(
+            \mathbf{x}_{n}-\mathbf{w}_{k})$\tcp*[r]{gradient descent}
+        }
+    }
+    \Return{$\mathbf{W}$, $\mathbf{r}$}
+}
+
+\caption{Update a Modulated SOM}\label{msom}
+
+\end{algorithm}
+\DecMargin{1em}
+
+
+\pagebreak
+\section*{Generating items from a MSOM}
 \begin{align}
 	&\emph{probability distribution of each}&& &&\nonumber\\
-    &\emph{cluster in the output space of the SOM} && p(y_k) = \frac{1}{\sqrt{2\pi(A\,\xi_k})^2} e^{-\frac{k^2}{2(A\,\xi_k)^2}}\nonumber\\
-    &\emph{mixture probability distribution} && p(y) = \sum_k \frac{\xi_k\,p(y_k)}{\sum_j\xi_j}\nonumber\\
-    &\emph{radial bases for the generation}&&\nonumber\\ 
-    &\emph{of SOM activations from sample} &&\hat{\psi}_k(y) = e^{-\frac{(y-k)^2}{2\beta^2}}\nonumber\\
-    & &&\psi_k(y) = \frac{\hat{\psi}_k(y)}{\sum_j{\hat{\psi}_j(y)}} \nonumber\\
-    &\emph{generated pattern}&&\mathbf{x}_g = \boldsymbol{\psi}(y)\nonumber     
+    &\emph{cluster in the output space of the MSOM} && p(y_k|\xi_k) = \frac{1}{A\,\xi_k\sqrt{2\pi}} e^{-\frac{k^2}{2(A\,\xi_k)^2}}\nonumber\\
+    &\emph{mixture probability distribution} && p(y|\boldsymbol{\xi}) = \sum_k \frac{\xi_k\,p(y_k)}{\sum_j\xi_j}\nonumber\\
+    &\emph{interpolating radial bases for the generation}&&\nonumber\\ 
+    &\emph{of MSOM activations from sample} &&\psi_k(y) = \frac{1}{\beta\sqrt{2\pi}}e^{-\frac{(y-k)^2}{2\beta^2}}\nonumber\\
+    & &&\boldsymbol{\psi}(y) = \{\psi_0(y),\dots\psi_k(y),\dots\psi_K(y)\}^T \nonumber\\
+    &\emph{generated pattern}&&\mathbf{x}_g = \mathbf{W}^T\boldsymbol{\psi}(y)\nonumber     
 \end{align}
 
-\section*{Predictor}
+\IncMargin{1em}
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\SetAlgorithmName{Code}{Code}{Code}
 
+\SetKwProg{Fn}{Function}{:}{}
+
+\KwIn{$\mathbf{x}\in\mathbb{R}^{N}$, $K$, $N$, $\beta$}    
+\KwOut{$\boldsymbol{\Psi}(\mathbf{x})\in\mathbb{R}^{K\times N}$}
+\SetKwFunction{Int}{Interp}
+
+\BlankLine
+\BlankLine
+\Fn{\Int{$\mathbf{x}$, $K$, $N$, $\beta$}}{
+ 	\BlankLine
+    \For{$k=1$ \KwTo {K}}{
+    	\For{$i=1$ \KwTo {N}}{
+ 	    $\psi_{k, i}(x_i)\leftarrow (\beta\sqrt{2\pi})^{-1}exp{\left(-(0.5((k - x_i)\beta^{-1})^2\right)}$\tcp*[f]{Radial bases}
+     	}
+  	}
+    \Return{$\boldsymbol{\Psi(\mathbf{x})}$}
+}
+
+\caption{Interpolation from points in the output space to output-unit activations}\label{interp}
+
+\end{algorithm}
+\DecMargin{1em}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\DontPrintSemicolon
+\SetAlgorithmName{Code}{Code}{Code}
+
+\SetKwProg{Fn}{Function}{:}{}
+
+\KwIn{$\mathbf{W}\in\mathbb{R}^{K\times M}$, $K$, $\boldsymbol{\xi}\in\mathbb{R}^K$, $\beta$}    
+\KwOut{$\mathbf{s}\in\mathbb{R}^{N}$, $\mathbf{X}_{gen}\in\mathbb{R}^{N\times M}$, $\boldsymbol{\Psi(\mathbf{s})}\in\mathbb{R}^{K\times N}$}
+
+\SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
+
+\BlankLine
+\BlankLine
+
+\Fn{\GenerateFromMSOM{$\mathbf{W}$, $K$, $N$, $\boldsymbol{\xi}$, $\beta$}}{
+	\BlankLine
+   
+   	\lFor{$n=1$ \KwTo {N}}{
+    	$s_n\sim p(y|\boldsymbol{\xi})$\tcp*[f]{Sampling}
+	}
+   
+   	$\boldsymbol{\Psi(\mathbf{s})}\leftarrow\Int{$\mathbf{s}$, $K$, $N$, $\beta$}$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Interpolating samples to get MSOM outputs}}
+   
+  
+   	$\boldsymbol{X}_{gen}\leftarrow \left(\mathbf{W}^T\boldsymbol{\Psi}\right)^T$\tcp*[r]{Back-propagate to the input space}
+   
+   	\BlankLine
+   	\BlankLine
+   
+   	\Return{$\mathbf{s}\in\mathbb{R}^{N}$, $\boldsymbol{X}_{gen}$, $\boldsymbol{\Psi(\mathbf{s})}$}
+}
+\caption{Generating items in the space of the inputs of the MSOM}\label{generate}
+\end{algorithm}
+\DecMargin{1em}
+
+\pagebreak
+\section*{Predictor (PRED)}
 \begin{align}
-	&\emph{input} && \mathbf{x}_i &&\in\mathbb{R}^K\nonumber\\
-	&&&with\ x_{in}\in\mathbb{R}: 0\leqslant x_{in}\leqslant 1  &&\,&&\nonumber\\
-	&\emph{dataset} &&\mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{t\times N} \nonumber\\
-	&\emph{weights} && \mathbf{w} &&\in\mathbb{R}^{K} \nonumber\\
-	&\emph{predictions} && \mathbf{Y} = \frac{1}{1 + exp(-\mathbf{w}^T\mathbf{X})}&&\in\mathbb{R}^{K} \nonumber
+	&\emph{dataset} &&\mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times K} \nonumber\\
+    &\emph{target} &&\boldsymbol{\lambda}=\left\{\lambda_0,\dots\lambda_n,\dots\lambda_N\right\}^T&&\in\mathbb{R}^N\nonumber\\
+      &\emph{weights}&&\mathbf{w}=\left\{w_0,\dots w_k,\dots w_K\right\}^T&&\in\mathbb{R}^K\nonumber\\
+	&\emph{predictions} && \mathbf{y} = \frac{1}{1 + e^{-\alpha(x-0.5)}} \nonumber\\
+    &&\in\mathbb{R}^{N} \nonumber\\
+    &\emph{cost function}&&L(\mathbf{w}) = \frac{1}{2N}\sum_{i=1}^N{\left(y_i - t_i\right)}&&with\ \gamma = \frac{1}{2\beta^2}\ and\ t_i=e^{-\gamma\lambda_i^2}\nonumber\\
+    &\emph{gradient}&&\Delta w_k = \frac{\partial{L(\mathbf{w})}}{\partial{w_k}} =\eta\gamma\alpha\sum_{i=1}^N x_{i, k} y_i(1-y_i)\left(y_i - t_i\right) \nonumber
 \end{align}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\SetAlgorithmName{Code}{Code}{Code}
+
+\DontPrintSemicolon
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\mathbf{w}\in\mathbb{R}^{K}$, $\alpha$}    
+\KwOut{$\mathbf{y}\in\mathbb{R}^{N}$}
+\SetKwFunction{Predict}{Predict}
+\SetKwProg{Fn}{Function}{:}{}
+\BlankLine
+\BlankLine
+\Fn{\Predict{$\mathbf{X}$, $\mathbf{w}$, $\alpha$}}{
+	\BlankLine
+	$\mathbf{y}\leftarrow ({1+exp({-\alpha(\mathbf{X}\mathbf{w}-0.5)}))^{-1}}$\; 
+   	\Return{$\mathbf{y}$}
+}
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\BlankLine
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\boldsymbol{\lambda}\in\mathbb{R}^{N}$,  $\mathbf{w}\in\mathbb{R}^{K}$, $\beta$, $\eta$, $\alpha$}    
+\KwOut{$\mathbf{w}\in\mathbb{R}^{K}$}
+\SetKwFunction{UpdatePredictor}{UpdatePredictor}
+\SetKwProg{Fn}{Function}{:}{}
+\BlankLine
+\BlankLine
+\Fn{\UpdatePredictor{$\mathbf{X}$, $\boldsymbol{\lambda}$, $\mathbf{w}$, $\beta$, $\eta$, $\alpha$}}{
+	\BlankLine
+    $\gamma\leftarrow\frac{1}{2\beta^2}$\;
+   
+	$\mathbf{y}\leftarrow  \Predict{$\mathbf{X}$,$\mathbf{w}$, $\alpha$}$\;
+    $\mathbf{w}\leftarrow\mathbf{w}+\eta\gamma\alpha\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)\left(y_i -  e^{-\gamma\lambda_i^2}\right)}$\;
+  
+     
+   	\Return{$\mathbf{w}$}
+}
+\caption{Predictor spreading and updating}\label{pred}
+\end{algorithm}
+\DecMargin{1em}
+
+\pagebreak
+\section*{Using SOMs to find sensorimotor contingencies (uncertainty version).}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\SetAlgorithmName{Code}{Code}{Code}
+
+\DontPrintSemicolon\SetKwInOut{Encoding}{Encoding weights}    
+\SetKwInOut{Motor}{Motor-control weights}    
+\SetKwInOut{Pred}{Prediction weights}    
+\SetKwInOut{Comp}{Competence levels}    
+\SetKwInOut{S}{States}    
+\SetKwInOut{A}{Actions}    
+\SetKwInOut{G}{Goals}    
+\SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
+\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{N}{Number of samples}    
+\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+
+\SetKwFunction{Int}{Interp}
+\SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
+\SetKwFunction{UpdateMSOM}{UpdateMSOM}
+\SetKwFunction{UpdatePredictor}{UpdatePredictor}
+\SetKwFunction{Predict}{Predict}
+
+\Encoding{$\mathbf{W}_e\in\mathbb{R}^{K\times M}$}
+\Motor{$\mathbf{W}_m\in\mathbb{R}^{K\times M}$}
+\Pred{$\mathbf{w}_p\in\mathbb{R}^{K}$}
+\Comp{$\boldsymbol{\xi}\in\mathbb{R}^{K}$}
+\A{$\mathbf{A}\in\mathbb{R}^{N\times M}$}
+\S{$\mathbf{S}\in\mathbb{R}^{N\times M}$}
+\G{$\mathbf{g}\in\mathbb{R}^{N}$}
+\M{$M$}
+\N{$N$}
+\K{$K$}
+\AA{$\alpha$}
+\B{$\beta$}
+\Nu{$\nu$}
+
+\BlankLine
+
+\Begin{
+
+    \BlankLine
+	
+    $\mathbf{c}\in\mathbb{R}^{K}$\;
+    \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
+	
+ 
+    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
+    \tcp*[r]{\parbox[t]{3in}{\raggedleft Motor-control outputs related to a fixed grid 
+    of points in the output space}}   
+    \BlankLine
+    
+	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
+
+    	\BlankLine
+	    \tcp*[r]{\parbox[t]{2in}{\raggedleft Update predictions over the grid positions in the output space}}  
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;   
+        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
+		
+    	\BlankLine
+		
+        \tcp*[r]{\parbox[t]{1.5in}{\raggedleft Sample goals and sample motor patterns from goals}}
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\omega}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
+        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{S}\leftarrow\mathbf{A}$\;
+
+    	\BlankLine
+	
+        \tcp*[r]{\parbox[t]{3in}{\raggedleft Compute distances between goal representations and sensory encodings}}
+        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        \For{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$\tcp*[r]{
+            \parbox[t]{3.in}{\raggedleft Match: distances between goals and 
+            encoded states}}
+        }\;
+        
+        \BlankLine
+	    \tcp*[r]{\parbox[t]{1in}{\raggedleft Train SOMs and predictor}}
+        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\boldsymbol{\chi}$, 
+        			$\mathbf{w}$, $\beta$, $\eta$, $\alpha$}$\;
+
+    	\BlankLine
+	
+    }
+}
+
+
+\caption{The SOMSMC algorithm}\label{smc1}
+\end{algorithm}
+\DecMargin{1em}
+
+\pagebreak
+\section*{Using SOMs to find sensorimotor contingencies (improvement version).}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\SetAlgorithmName{Code}{Code}{Code}
+
+\DontPrintSemicolon\SetKwInOut{Encoding}{Encoding weights}    
+\SetKwInOut{Motor}{Motor-control weights}    
+\SetKwInOut{Pred}{Prediction weights}    
+\SetKwInOut{Comp}{Competence levels}    
+\SetKwInOut{S}{States}    
+\SetKwInOut{A}{Actions}    
+\SetKwInOut{G}{Goals}    
+\SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
+\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{N}{Number of samples}    
+\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+
+\SetKwFunction{Int}{Interp}
+\SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
+\SetKwFunction{UpdateMSOM}{UpdateMSOM}
+\SetKwFunction{UpdatePredictor}{UpdatePredictor}
+\SetKwFunction{Predict}{Predict}
+
+\Encoding{$\mathbf{W}_e\in\mathbb{R}^{K\times M}$}
+\Motor{$\mathbf{W}_m\in\mathbb{R}^{K\times M}$}
+\Pred{$\mathbf{w}_p\in\mathbb{R}^{K}$}
+\Comp{$\boldsymbol{\xi}\in\mathbb{R}^{K}$}
+\A{$\mathbf{A}\in\mathbb{R}^{N\times M}$}
+\S{$\mathbf{S}\in\mathbb{R}^{N\times M}$}
+\G{$\mathbf{g}\in\mathbb{R}^{N}$}
+\M{$M$}
+\N{$N$}
+\K{$K$}
+\AA{$\alpha$}
+\B{$\beta$}
+\Nu{$\nu$}
+
+\BlankLine
+
+\Begin{
+
+    \BlankLine
+    
+    $\mathbf{c}\in\mathbb{R}^{K}$\;
+    \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
+	$\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
+    \tcp*[r]{\parbox[t]{3in}{\raggedleft Motor-control outputs related to a fixed grid 
+    of points in the output space}}
+
+    \BlankLine
+    
+    $\boldsymbol{\mu_{\xi}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$\;
+    $\boldsymbol{\xi_{pred}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$
+
+    \BlankLine
+       
+	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
+       
+       \BlankLine
+        
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
+        
+        \BlankLine
+      
+        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
+        $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
+        
+        $\boldsymbol{\gamma}\leftarrow\mathbf{\Psi_{grid}}_{i_{\xi}}$
+        
+        \BlankLine
+              
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\gamma}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
+        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{S}\leftarrow\mathbf{A}$\;
+        
+        \BlankLine
+        
+        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+                
+        \BlankLine
+          
+        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        \For{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$\tcp*[r]{
+            \parbox[t]{3.in}{\raggedleft Match: distances between goals and 
+            encoded states}}
+        }\;
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\boldsymbol{\chi}$, 
+        			$\mathbf{w}$, $\beta$, $\eta$, $\alpha$}$\;
+                            
+        \BlankLine
+          
+    }
+}
+\caption{The SOMSMC algorithm}\label{smc2}
+\end{algorithm}
+
 
 \end{document}
