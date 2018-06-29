@@ -316,12 +316,15 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     \BlankLine
     
  	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
-    	\BlankLine
+    	
+        \BlankLine
+        \tcp{Get current prediction and uncertainty}
         $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
 		
     	\BlankLine
 		
+        \tcp{Generate goals and actions}
     	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\omega}$, $\beta$}\;  
         $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
@@ -330,6 +333,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
     	\BlankLine
 	
+        \tcp{Compute match events}
         $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
         	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
@@ -338,6 +342,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         
         \BlankLine
         
+        \tcp{Update weights}
         $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, z$\eta$, $\alpha$}$\;
@@ -413,15 +418,19 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
        
        \BlankLine
         
+        \tcp{Get current prediction and uncertainty}
         $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
-        
+         $\boldsymbol{\omega}\leftarrow 1 - \boldsymbol{\xi}$\;
+
         \BlankLine
       
+        \tcp{Compute moving average of prediction inprovement}
         $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
         $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
                 
         \BlankLine
-              
+         
+        \tcp{Generate goals and actions based on prediction improvement }
     	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
         $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
@@ -441,7 +450,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
                    
         \BlankLine
-        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
+        
         $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
