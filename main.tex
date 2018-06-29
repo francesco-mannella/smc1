@@ -438,11 +438,8 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         $\mathbf{S}\leftarrow\mathbf{A}$\;
         
         \BlankLine
-             
-
-                
-        \BlankLine
-          
+         
+        \tcp{Compute match events}
         $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
         	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
@@ -451,10 +448,16 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
                    
         \BlankLine
         
+        \tcp{Update weights}
         $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
+        \BlankLine
+        
+        \tcp{Storage}
+        $\boldsymbol{\xi_{pred}} \leftarrow \boldsymbol{\xi}$
+                                    
         \BlankLine
           
     }
@@ -525,15 +528,19 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
        
        \BlankLine
         
+        \tcp{Get current uncertainty and prediction}
         $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
-        
+        $\boldsymbol{\omega}\leftarrow 1 - \boldsymbol{\xi}$\;
+
         \BlankLine
-      
+        
+        \tcp{Compute moving average of prediction improvement}
         $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
         $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
                 
         \BlankLine
               
+        \tcp{Generate goals and actions based on prediction improvement}
     	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
         $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
@@ -542,28 +549,31 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         
         \BlankLine
              
-
-                
-        \BlankLine
-          
+        \tcp{Compute match events and match-based rewards}
         $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
-        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        $\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
         }
 		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
 		$\mathbf{r} \leftarrow  \begin{cases}
-									0  &  \mathbf{m} <= th_{m}\\
-									1  &  \mathbf{m} > th_{m}
-								\end{cases}$\;
+			0  &  \mathbf{m} <= th_{m}\\
+			1  &  \mathbf{m} > th_{m}
+		\end{cases}$\;
                    
         \BlankLine
-        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
-        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
+        
+        \tcp{Update weights}
+        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega\odot\mathbf{r}}$, $\eta$}\;
+        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}\odot\mathbf{r}$, $\eta$}\;       
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
         \BlankLine
-          
+        
+        \tcp{Storage}
+        $\boldsymbol{\xi_{pred}} \leftarrow \boldsymbol{\xi}$
+                                    
+        \BlankLine
+             
     }
 }
 \caption{The SOMSMC algorithm}\label{smc3}
