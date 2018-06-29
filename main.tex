@@ -6,19 +6,23 @@
 \usepackage[T1]{fontenc}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{}
 \usepackage[vlined,ruled]{algorithm2e}
 
 \DeclareMathOperator*{\argmin}{\operatorname*{arg\,min}} % Jan Hlavacek
 \DeclareMathOperator*{\argmax}{\operatorname*{arg\,max}} % Jan Hlavacek
 
 %% Sets page size and margins
-\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[a4paper,top=1cm,bottom=1cm,left=2cm,right=1cm,marginparwidth=1.75cm]{geometry}
 
 %% Useful packages
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand\mycommfont[1]{\footnotesize\ttfamily\textcolor{gray}{#1}}
+\SetCommentSty{mycommfont}
 
 \title{Using SOMs for the detection of sensorimotor contingencies.}
 \author{}
@@ -237,18 +241,17 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \BlankLine
 \BlankLine
 \BlankLine
-\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\boldsymbol{\lambda}\in\mathbb{R}^{N}$,  $\mathbf{w}\in\mathbb{R}^{K}$, $\beta$, $\eta$, $\alpha$}    
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\boldsymbol{\lambda}\in\mathbb{R}^{N}$,  $\mathbf{w}\in\mathbb{R}^{K}$, $\eta$, $\alpha$}    
 \KwOut{$\mathbf{w}\in\mathbb{R}^{K}$}
 \SetKwFunction{UpdatePredictor}{UpdatePredictor}
 \SetKwProg{Fn}{Function}{:}{}
 \BlankLine
 \BlankLine
-\Fn{\UpdatePredictor{$\mathbf{X}$, $\boldsymbol{\lambda}$, $\mathbf{w}$, $\beta$, $\eta$, $\alpha$}}{
+\Fn{\UpdatePredictor{$\mathbf{X}$, $\boldsymbol{\lambda}$, $\mathbf{w}$, $\eta$, $\alpha$}}{
 	\BlankLine
-    $\gamma\leftarrow\frac{1}{2\beta^2}$\;
    
 	$\mathbf{y}\leftarrow  \Predict{$\mathbf{X}$,$\mathbf{w}$, $\alpha$}$\;
-    $\mathbf{w}\leftarrow\mathbf{w}+\eta\gamma\alpha\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)\left(y_i -  e^{-\gamma\lambda_i^2}\right)}$\;
+    $\mathbf{w}\leftarrow\mathbf{w}+\eta\gamma\alpha\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)\left(y_i -  \lambda_i\right)}$\;
   
      
    	\Return{$\mathbf{w}$}
@@ -277,6 +280,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
 \SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
 \SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Rho}{amplitude reward region\ \ \ \ \ \ }    
 
 \SetKwFunction{Int}{Interp}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
@@ -297,32 +301,27 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \AA{$\alpha$}
 \B{$\beta$}
 \Nu{$\nu$}
+\Rho{$\rho$}
 
 \BlankLine
 
 \Begin{
 
     \BlankLine
-	
+    
+    
     $\mathbf{c}\in\mathbb{R}^{K}$\;
     \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
-	
- 
-    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
-    \tcp*[r]{\parbox[t]{3in}{\raggedleft Motor-control outputs related to a fixed grid 
-    of points in the output space}}   
+    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$\;
     \BlankLine
     
-	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
-
+ 	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
     	\BlankLine
-	    \tcp*[r]{\parbox[t]{2in}{\raggedleft Update predictions over the grid positions in the output space}}  
-        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;   
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
 		
     	\BlankLine
 		
-        \tcp*[r]{\parbox[t]{1.5in}{\raggedleft Sample goals and sample motor patterns from goals}}
     	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\omega}$, $\beta$}\;  
         $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
@@ -331,26 +330,22 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
     	\BlankLine
 	
-        \tcp*[r]{\parbox[t]{3in}{\raggedleft Compute distances between goal representations and sensory encodings}}
         $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
-        \For{$i=1$ \KwTo $N$}{
-        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$\tcp*[r]{
-            \parbox[t]{3.in}{\raggedleft Match: distances between goals and 
-            encoded states}}
-        }\;
+        \lFor{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        }
+		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
         
         \BlankLine
-	    \tcp*[r]{\parbox[t]{1in}{\raggedleft Train SOMs and predictor}}
+        
         $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\boldsymbol{\chi}$, 
-        			$\mathbf{w}$, $\beta$, $\eta$, $\alpha$}$\;
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, z$\eta$, $\alpha$}$\;
 
     	\BlankLine
 	
     }
 }
-
 
 \caption{The SOMSMC algorithm}\label{smc1}
 \end{algorithm}
@@ -406,8 +401,6 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     $\mathbf{c}\in\mathbb{R}^{K}$\;
     \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
 	$\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
-    \tcp*[r]{\parbox[t]{3in}{\raggedleft Motor-control outputs related to a fixed grid 
-    of points in the output space}}
 
     \BlankLine
     
@@ -421,38 +414,37 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
        \BlankLine
         
         $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
-        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
         
         \BlankLine
       
         $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
         $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
-        
-        $\boldsymbol{\gamma}\leftarrow\mathbf{\Psi_{grid}}_{i_{\xi}}$
-        
+                
         \BlankLine
               
-    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\gamma}$, $\beta$}\;  
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
         $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
         $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
         $\mathbf{S}\leftarrow\mathbf{A}$\;
         
         \BlankLine
-        
-        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+             
+
                 
         \BlankLine
           
         $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
-        \For{$i=1$ \KwTo $N$}{
-        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$\tcp*[r]{
-            \parbox[t]{3.in}{\raggedleft Match: distances between goals and 
-            encoded states}}
-        }\;
-        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\boldsymbol{\chi}$, 
-        			$\mathbf{w}$, $\beta$, $\eta$, $\alpha$}$\;
+        \lFor{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        }
+		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
+                   
+        \BlankLine
+        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
+        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
         \BlankLine
           
@@ -460,6 +452,113 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 }
 \caption{The SOMSMC algorithm}\label{smc2}
 \end{algorithm}
+\DecMargin{1em}
 
+\pagebreak
+\section*{Using SOMs to find sensorimotor contingencies (improvement + march-dependent version).}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\SetAlgorithmName{Code}{Code}{Code}
+
+\DontPrintSemicolon\SetKwInOut{Encoding}{Encoding weights}    
+\SetKwInOut{Motor}{Motor-control weights}    
+\SetKwInOut{Pred}{Prediction weights}    
+\SetKwInOut{Comp}{Competence levels}    
+\SetKwInOut{S}{States}    
+\SetKwInOut{A}{Actions}    
+\SetKwInOut{G}{Goals}    
+\SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
+\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{N}{Number of samples}    
+\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+
+\SetKwFunction{Int}{Interp}
+\SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
+\SetKwFunction{UpdateMSOM}{UpdateMSOM}
+\SetKwFunction{UpdatePredictor}{UpdatePredictor}
+\SetKwFunction{Predict}{Predict}
+
+\Encoding{$\mathbf{W}_e\in\mathbb{R}^{K\times M}$}
+\Motor{$\mathbf{W}_m\in\mathbb{R}^{K\times M}$}
+\Pred{$\mathbf{w}_p\in\mathbb{R}^{K}$}
+\Comp{$\boldsymbol{\xi}\in\mathbb{R}^{K}$}
+\A{$\mathbf{A}\in\mathbb{R}^{N\times M}$}
+\S{$\mathbf{S}\in\mathbb{R}^{N\times M}$}
+\G{$\mathbf{g}\in\mathbb{R}^{N}$}
+\M{$M$}
+\N{$N$}
+\K{$K$}
+\AA{$\alpha$}
+\B{$\beta$}
+\Nu{$\nu$}
+
+\BlankLine
+
+\Begin{
+
+    \BlankLine
+    
+    $\mathbf{c}\in\mathbb{R}^{K}$\;
+    \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
+	$\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
+
+    \BlankLine
+    
+    $\boldsymbol{\mu_{\xi}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$\;
+    $\boldsymbol{\xi_{pred}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$
+
+    \BlankLine
+       
+	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
+       
+       \BlankLine
+        
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
+        
+        \BlankLine
+      
+        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
+        $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
+                
+        \BlankLine
+              
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
+        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{S}\leftarrow\mathbf{A}$\;
+        
+        \BlankLine
+             
+
+                
+        \BlankLine
+          
+        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        \lFor{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        }
+		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
+		$\mathbf{r} \leftarrow  \begin{cases}
+									0  &  \mathbf{m} <= th_{m}\\
+									1  &  \mathbf{m} > th_{m}
+								\end{cases}$\;
+                   
+        \BlankLine
+        $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
+        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
+                            
+        \BlankLine
+          
+    }
+}
+\caption{The SOMSMC algorithm}\label{smc3}
+\end{algorithm}
+\DecMargin{1em}
 
 \end{document}
