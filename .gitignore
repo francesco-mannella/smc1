@@ -2,9 +2,14 @@
 **/*.out
 **/*.log
 **/*.bbl
+**/*.blg
 **/*.aux
 **/*.png
 **/*.gif
+**/*.pdf
+**/*.ps
+**/*.dvi
+**/*.gz
 **/*_sources
 **/*_checkpoints
 frames
