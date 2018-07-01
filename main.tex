@@ -483,9 +483,10 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
 \SetKwInOut{K}{clusters in the encoding space}    
 \SetKwInOut{N}{Number of samples}    
-\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{B}{Amplitude of the interpolation radial bases \ \ \ \ \ \ }    
 \SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
-\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Thm}{Threshold of the reward region\ \ \ \ \ \ }    
 
 \SetKwFunction{Int}{Interp}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
@@ -506,6 +507,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \AA{$\alpha$}
 \B{$\beta$}
 \Nu{$\nu$}
+\Thm{$th_{m}$}
 
 \BlankLine
 
@@ -557,7 +559,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
 		$\mathbf{r} \leftarrow  \begin{cases}
 			0  &  \mathbf{m} <= th_{m}\\
-			1  &  \mathbf{m} > th_{m}
+			1  &  otherwise
 		\end{cases}$\;
                    
         \BlankLine
