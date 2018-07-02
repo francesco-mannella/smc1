@@ -1,10 +1,16 @@
 **/*.pyc
+**/*.aux
 **/*.out
 **/*.log
 **/*.bbl
-**/*.aux
+**/*.blg
+**/*.blg
+**/*.pdf
+**/*.ps
+**/*.dvi
 **/*.png
 **/*.gif
+**/*.gz
 **/*_sources
 **/*tags
 **/*_checkpoints
