@@ -37,41 +37,93 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
 
 \begin{align}
-	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_1,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times M} \nonumber\\
-	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_1,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{K \times M} \nonumber\\
-     &\emph{winners}&&  r_{n,k} = 
-  k = \argmin_k ||\mathbf{x}_n - \mathbf{w}_k|| &&\nonumber\\
-    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = e^{{-\gamma (j-r_{n,k})^2}} && with\ \gamma=\frac{1}{2\sigma^2}\nonumber\\
-    &&& \boldsymbol{\phi}_k = \{\phi_{0,k}, \dots\phi_{j,k}, \dots \phi_{K,k}\}^T && \in\mathbb{R}^{K}\nonumber\\
- 	&\emph{cost function} && L(\mathbf{W}) = \frac{1}{2}\sum_n\sum_k \boldsymbol{\phi}_{k}||\mathbf{x}_n - \mathbf{w}_k||^2 &&   &&\nonumber\\
-    &\emph{online gradient}&& \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_k} = \eta\sum_{n}{\boldsymbol{\phi}_{k}(\mathbf{x}_{n} -\mathbf{w}_{k})} &&\nonumber\\
-    &\emph{learning rate decay}&&  \eta = \eta_0e^{-t/(\alpha\cdot epochs)} &&\nonumber\\
-    &\emph{neighborhood decay}&&  \sigma = \sigma_0e^{-t/(\alpha\cdot epochs)} &&\nonumber   
+	%
+    %
+	& \emph{dataset} && 
+    \mathbf{X} = \left\{\mathbf{x}^T_1, 
+    \dots\mathbf{x}^T_n, \dots\mathbf{x}^T_N\right\}^T && 
+    \in\mathbb{R}^{N\times M} \nonumber\\
+    %
+    %
+	& \emph{prototypes} &&
+    \mathbf{W} = \left\{\mathbf{w}^T_1, 
+    \dots\mathbf{w}^T_k, \dots\mathbf{w}^T_K\right\}^T && 
+    \in\mathbb{R}^{K \times M} \nonumber\\
+    %
+    %
+    & \emph{winners}&&  r_{n} = \argmin_k || 
+    \mathbf{x}_n - \mathbf{w}_k || && \nonumber\\
+    %
+    %
+    & \emph{radial bases for neighborhood} && 
+    {\phi}_{k,n} = e^{{-\gamma (k - r_{n})^2}} && 
+    with\ \gamma = \frac{1}{2\sigma^2}\nonumber\\
+    %
+    %
+ 	& \emph{cost function} &&
+    L(\mathbf{W}) = \frac{1}{2} \sum_n \sum_k 
+    \phi_{k, n} || \mathbf{x}_n - \mathbf{w}_k 
+    || ^2 &&&&\nonumber\\
+    %
+    %
+    & \emph{online gradient} && 
+    \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}
+    {\partial\mathbf{w}_k} = \eta\sum_{n}{ 
+    \phi_{k, n}(\mathbf{x}_{n} -\mathbf{w}_{k})} && \nonumber\\
+    %
+    %
+    & \emph{learning rate decay} && 
+    \eta = \eta_0e^{ -t/(\alpha\cdot epochs)} && \nonumber\\
+    %
+    %
+    & \emph{neighborhood decay} &&  \sigma = 
+    \sigma_0e^{-t/(\alpha\cdot epochs)} && \nonumber   
 \end{align}
 
 \IncMargin{1em}
 \begin{algorithm}
 \SetAlgorithmName{Code}{Code}{Code}
 \DontPrintSemicolon
-\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, $\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, $\sigma$, $\eta$}    
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, 
+	$\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, 
+    $\sigma$, $\eta$}    
 \KwOut{$\mathbf{W}\in\mathbb{R}^{K\times M}$}
 \SetKwFunction{UpdateSOM}{UpdateSOM}
 \SetKwProg{Fn}{Function}{:}{}
+
 \BlankLine
+
 \BlankLine
-\Fn{\UpdateSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, $K$, $\sigma$, $\eta$}}{
+
+\Fn{\UpdateSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, 
+	$K$, $\sigma$, $\eta$}}{
+
 	\BlankLine
-	$\gamma \leftarrow \frac{1}{2\sigma^2}$\tcp*[r]{Extension of the neighborhood}\;
+    
+	$\gamma \leftarrow \frac{1}{2\sigma^2}$
+    \tcp*[r]{Extension of the neighborhood}
+
+	\BlankLine
+        
     \For{$n\leftarrow0$ \KwTo {$N$}}{
-    	\For{$k\leftarrow1$ \KwTo {$K$}}{
-            $r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$\tcp*[r]{Winning prototype}
-            \For{$j\leftarrow1$ \KwTo {$K$}}{
-                 $\phi_{j, k}\leftarrow exp(\gamma(j - r_{n})^2)$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Radial bases of distances from winner}}
-            }
+      
+		\BlankLine
+      
+    	$r_{n}\leftarrow \argmin_k || 
+        \mathbf{x}_n - \mathbf{w}_k ||$
+        \tcp*[r]{Winning prototype}
+       
+		\BlankLine
+                 
+        \For{$k\leftarrow1$ \KwTo {$K$}}{
+        	$\phi_{k, n}\leftarrow exp(\gamma(k - r_{n})^2)$
+                 \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
+                 Radial bases of distances from winner}}
+                 
             $\mathbf{w}_k \leftarrow 
             \mathbf{w}_k + \eta
-            \boldsymbol{\phi}_{k}(
-            \mathbf{x}_{n}-\mathbf{w}_{k})$\tcp*[r]{gradient descent}
+            \phi_{k, n}(\mathbf{x}_{n}-\mathbf{w}_{k})$
+            \tcp*[r]{gradient descent}
         }
     }
     \Return{$\mathbf{W}$}
@@ -84,15 +136,44 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \section*{Modulated Self-Organizing Map (MSOM)}
      The idea of SOM can be further exploited by adding a further modulation to the update of the weight vectors. This further modulation acts independently of the main modulation relative to the distance of the unit from the winner. Thus we can add further constraints to the topology of the output units in the input space.
 \begin{align}
-	&\emph{dataset} && \mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times M} \nonumber\\
-	&\emph{prototypes} && \mathbf{W}=\left\{\mathbf{w}^T_0,\dots\mathbf{w}^T_k,\dots\mathbf{w}^T_K\right\}^T &&\in\mathbb{R}^{K \times M} \nonumber\\
- 	&\emph{winners}&&  r_{n,k} = 
-  k = \argmin_k ||\mathbf{x}_n - \mathbf{w}_k|| &&\nonumber\\
-    &\emph{modulation}&&\boldsymbol{\xi}\in\mathbb{R}^{K},\ \overline{\xi} = \frac{\sum_k \xi_k}{K}&&\nonumber\\
-    &\emph{radial bases for neighborhood} && {\phi}_{j,k} = \overline{\xi}\,e^{{-\gamma (j- r_{n,k})^2}}&& with\ \gamma=\frac{1}{2{\xi_k}^2}\nonumber\\
-    &&& \boldsymbol{\phi}_k = \{\phi_{0,k}, \dots\phi_{j,k}, \dots \phi_{K,k}\}^T && \in\mathbb{R}^{K}\nonumber\\
-    &\emph{cost function} && L(\mathbf{W}) = \frac{1}{2}\sum_n\sum_k \phi_{n,k}||\mathbf{x}_n - \mathbf{w}_k||^2  &&\nonumber\\
-    &\emph{online gradient}&& \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}{\partial\mathbf{w}_{k}} = \eta{\sum_{n}{\boldsymbol{\phi}_{k}(\mathbf{x}_n - \mathbf{w}_{k})}} &&\nonumber
+	%
+    %
+	& \emph{dataset} && 
+    \mathbf{X} = \left\{\mathbf{x}^T_0, \dots\mathbf{x}^T_n, 
+    \dots\mathbf{x}^T_N\right\}^T && 
+    \in \mathbb{R}^{N\times M} \nonumber\\
+    %
+    %
+	& \emph{prototypes} && 
+    \mathbf{W}=\left\{\ mathbf{w}^T_0, \dots\mathbf{w}^T_k, 
+    \dots\mathbf{w}^T_K\right\}^T &&
+    \in \mathbb{R}^{K \times M} \nonumber\\
+    %
+    %
+ 	& \emph{winners} &&  
+    r_{n} = \argmin_k  || 
+    \mathbf{x}_n - \mathbf{w}_k || && \nonumber\\
+    %
+    %
+    & \emph{modulation} && 
+    \boldsymbol{\xi} \in \mathbb{R}^{K}, \ 
+    \overline{\xi} = \frac{\sum_k \xi_k}{K} && \nonumber\\
+    %
+    %
+    & \emph{radial bases for neighborhood} && 
+    {\phi}_{k,n} = \overline{\xi}\, e^{{-\gamma (k- r_{n})^2}} && 
+    with\ \gamma = \frac{1}{2{\xi_k}^2} \nonumber\\
+    %
+    %
+    & \emph{cost function} &&
+    L(\mathbf{W}) = \frac{1}{2}\sum_n\sum_k \phi_{n,k} 
+    || \mathbf{x}_n - \mathbf{w}_k||^2  &&\nonumber\\
+    %
+    %
+    & \emph{online gradient} && 
+    \Delta{\mathbf{w}_{k}} = -\eta\frac{\partial L(\mathbf{W})}
+    {\partial\mathbf{w}_{k}} = \eta{\sum_{n}{ \phi_{n,k} 
+    (\mathbf{x}_n - \mathbf{w}_{k})}} &&\nonumber
 \end{align}
 
 \IncMargin{1em}
@@ -100,29 +181,50 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \DontPrintSemicolon
 \SetAlgorithmName{Code}{Code}{Code}
 
-\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, $\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, $\boldsymbol{\xi}\in\mathbb{R}^K$, $\eta$}    
-\KwOut{$\mathbf{W}\in\mathbb{R}^{K\times M}$, $\mathbf{r}\in\mathbb{R}^{N}$}
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times M}$, 
+	$\mathbf{W}\in\mathbb{R}^{K\times M}$, $M$, $K$, 
+    $\boldsymbol{\xi}\in\mathbb{R}^K$, $\eta$}    
+\KwOut{$\mathbf{W}\in\mathbb{R}^{K\times M}$}
 \SetKwFunction{UpdateMSOM}{UpdateMSOM}
 \SetKwProg{Fn}{Function}{:}{}
+
 \BlankLine
+
 \BlankLine
-\Fn{\UpdateMSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, $K$, $\boldsymbol{\xi}$, $\eta$}}{
+
+\Fn{\UpdateMSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, 
+	$K$, $\boldsymbol{\xi}$, $\eta$}}{
+
 	\BlankLine
-	$\boldsymbol{\gamma} \leftarrow \frac{1}{2\boldsymbol{\xi}^2}$\tcp*[r]{Extension of the neighborhood}
-    $\overline{\xi} = \frac{\sum_k \xi_k}{K}$\tcp*[r]{Modulation mean}\;
+    
+    $\mathbf{r}\in\mathbb{R}^{N}$
+    
+	\BlankLine
+    
+	$\boldsymbol{\gamma} \leftarrow \frac{1}{2\boldsymbol{\xi}^2}$
+    \tcp*[r]{Extension of the neighborhood}
+    
+    $\overline{\xi} = \frac{\sum_k \xi_k}{K}$
+    \tcp*[r]{Modulation mean}\;
+    
     \For{$n\leftarrow0$ \KwTo {$N$}}{
-    	\For{$k\leftarrow1$ \KwTo {$K$}}{
-            $r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$\tcp*[r]{Winning prototype}
-            \For{$j\leftarrow1$ \KwTo {$K$}}{
-                 $\phi_{j, k}\leftarrow \overline{\xi}\,exp(\gamma_k(j - r_{n})^2)$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Radial bases of distances from winner}}
-            }
+    	$r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$
+        \tcp*[r]{Winning prototype}
+        
+        \For{$k\leftarrow1$ \KwTo {$K$}}{
+        	$\phi_{k, n}\leftarrow \overline{\xi}\, 
+            exp(\gamma_k(k - r_{n})^2)$
+            \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
+            Radial bases of distances from winner}}
+        
             $\mathbf{w}_k \leftarrow 
             \mathbf{w}_k + \eta
-            \boldsymbol{\phi}_{k}(
-            \mathbf{x}_{n}-\mathbf{w}_{k})$\tcp*[r]{gradient descent}
+            \phi_{k, n}(
+            \mathbf{x}_{n}-\mathbf{w}_{k})$
+            \tcp*[r]{gradient descent}
         }
     }
-    \Return{$\mathbf{W}$, $\mathbf{r}$}
+    \Return{$\mathbf{W}$}
 }
 
 \caption{Update a Modulated SOM}\label{msom}
@@ -130,17 +232,36 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \end{algorithm}
 \DecMargin{1em}
 
-
 \pagebreak
+
 \section*{Generating items from a MSOM}
+
 \begin{align}
-	&\emph{probability distribution of each}&& &&\nonumber\\
-    &\emph{cluster in the output space of the MSOM} && p(y_k|\xi_k) = \frac{1}{A\,\xi_k\sqrt{2\pi}} e^{-\frac{k^2}{2(A\,\xi_k)^2}}\nonumber\\
-    &\emph{mixture probability distribution} && p(y|\boldsymbol{\xi}) = \sum_k \frac{\xi_k\,p(y_k)}{\sum_j\xi_j}\nonumber\\
-    &\emph{interpolating radial bases for the generation}&&\nonumber\\ 
-    &\emph{of MSOM activations from sample} &&\psi_k(y) = \frac{1}{\beta\sqrt{2\pi}}e^{-\frac{(y-k)^2}{2\beta^2}}\nonumber\\
-    & &&\boldsymbol{\psi}(y) = \{\psi_0(y),\dots\psi_k(y),\dots\psi_K(y)\}^T \nonumber\\
-    &\emph{generated pattern}&&\mathbf{x}_g = \mathbf{W}^T\boldsymbol{\psi}(y)\nonumber     
+    %
+    %
+	& \emph{\parbox[t]{2.5in}{probability distribution of 
+    each cluster in the output space of the MSOM}} && 
+    p(y_k|\xi_k) = \frac{1}{A\,\xi_k\sqrt{2\pi}} 
+    e^{-\frac{k^2}{2(A\,\xi_k)^2}}\nonumber\\
+    %
+    %
+    & \emph{mixture probability distribution} && 
+    p(y|\boldsymbol{\xi}) = \sum_k \frac{\xi_k\, p(y_k)}
+    {\sum_j\xi_j}\nonumber\\
+    %
+    %
+    & \emph{\parbox[t]{2.5in}{interpolating radial bases
+    for the generation of MSOM activations from sample}} && 
+    \psi_k(y) = \frac{1}{\beta\sqrt{2\pi}}
+    e^{-\frac{(y-k)^2}{2\beta^2}}\nonumber\\
+    %
+    %
+    & &&\boldsymbol{\psi}(y) = \{\psi_0(y),\dots\psi_k(y), 
+    \dots\psi_K(y)\}^T \nonumber\\
+    %
+    %
+    & \emph{generated pattern} &&
+    \mathbf{x}_g = \mathbf{W}^T\boldsymbol{\psi}(y)\nonumber     
 \end{align}
 
 \IncMargin{1em}
@@ -155,12 +276,16 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwFunction{Int}{Interp}
 
 \BlankLine
+
 \BlankLine
+
 \Fn{\Int{$\mathbf{x}$, $K$, $N$, $\beta$}}{
  	\BlankLine
     \For{$k=1$ \KwTo {K}}{
     	\For{$i=1$ \KwTo {N}}{
- 	    $\psi_{k, i}(x_i)\leftarrow (\beta\sqrt{2\pi})^{-1}exp{\left(-(0.5((k - x_i)\beta^{-1})^2\right)}$\tcp*[f]{Radial bases}
+ 	    	$\psi_{k, i}(x_i) \leftarrow (\beta\sqrt{2\pi})^{-1}
+        	exp{\left(-(0.5((k - x_i) \beta^{-1})^2\right)}$
+        \tcp*[f]{Radial bases}
      	}
   	}
     \Return{$\boldsymbol{\Psi(\mathbf{x})}$}
@@ -178,30 +303,42 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
 \SetKwProg{Fn}{Function}{:}{}
 
-\KwIn{$\mathbf{W}\in\mathbb{R}^{K\times M}$, $K$, $\boldsymbol{\xi}\in\mathbb{R}^K$, $\beta$}    
-\KwOut{$\mathbf{s}\in\mathbb{R}^{N}$, $\mathbf{X}_{gen}\in\mathbb{R}^{N\times M}$, $\boldsymbol{\Psi(\mathbf{s})}\in\mathbb{R}^{K\times N}$}
+\KwIn{$\mathbf{W}\in\mathbb{R}^{K\times M}$, $K$,
+	$\boldsymbol{\xi}\in\mathbb{R}^K$, $\beta$}    
+\KwOut{$\mathbf{s}\in\mathbb{R}^{N}$, 
+	$\mathbf{X}_{gen} \in \mathbb{R}^{N\times M}$, 
+    $\boldsymbol{\Psi(\mathbf{s})}\in\mathbb{R}^{K\times N}$}
 
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
 
 \BlankLine
+
 \BlankLine
 
-\Fn{\GenerateFromMSOM{$\mathbf{W}$, $K$, $N$, $\boldsymbol{\xi}$, $\beta$}}{
+\Fn{\GenerateFromMSOM{$\mathbf{W}$, $K$, $N$, 
+	$\boldsymbol{\xi}$, $\beta$}}{
 	\BlankLine
    
    	\lFor{$n=1$ \KwTo {N}}{
-    	$s_n\sim p(y|\boldsymbol{\xi})$\tcp*[f]{Sampling}
+    	$s_n\sim p(y|\boldsymbol{\xi})$
+        \tcp*[f]{Sampling}
 	}
    
-   	$\boldsymbol{\Psi(\mathbf{s})}\leftarrow\Int{$\mathbf{s}$, $K$, $N$, $\beta$}$\tcp*[r]{\parbox[t]{2.2in}{\raggedleft Interpolating samples to get MSOM outputs}}
+   	$\boldsymbol{\Psi(\mathbf{s})} \leftarrow 
+    \Int{$\mathbf{s}$, $K$, $N$, $\beta$}$
+    \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
+    Interpolating samples to get MSOM outputs}}
    
-  
-   	$\boldsymbol{X}_{gen}\leftarrow \left(\mathbf{W}^T\boldsymbol{\Psi}\right)^T$\tcp*[r]{Back-propagate to the input space}
+   	$\boldsymbol{X}_{gen} \leftarrow 
+    \left(\mathbf{W}^T\boldsymbol{\Psi}\right)^T$
+    \tcp*[r]{Back-propagate to the input space}
    
    	\BlankLine
+    
    	\BlankLine
    
-   	\Return{$\mathbf{s}\in\mathbb{R}^{N}$, $\boldsymbol{X}_{gen}$, $\boldsymbol{\Psi(\mathbf{s})}$}
+   	\Return{$\mathbf{s}\in\mathbb{R}^{N}$, $\boldsymbol{X}_{gen}$,
+    $\boldsymbol{\Psi(\mathbf{s})}$}
 }
 \caption{Generating items in the space of the inputs of the MSOM}\label{generate}
 \end{algorithm}
@@ -210,13 +347,41 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \pagebreak
 \section*{Predictor (PRED)}
 \begin{align}
-	&\emph{dataset} &&\mathbf{X}=\left\{\mathbf{x}^T_0,\dots\mathbf{x}^T_n,\dots\mathbf{x}^T_N\right\}^T &&\in\mathbb{R}^{N\times K} \nonumber\\
-    &\emph{target} &&\boldsymbol{\lambda}=\left\{\lambda_0,\dots\lambda_n,\dots\lambda_N\right\}^T&&\in\mathbb{R}^N\nonumber\\
-      &\emph{weights}&&\mathbf{w}=\left\{w_0,\dots w_k,\dots w_K\right\}^T&&\in\mathbb{R}^K\nonumber\\
-	&\emph{predictions} && \mathbf{y} = \frac{1}{1 + e^{-\alpha(x-0.5)}} \nonumber\\
-    &&\in\mathbb{R}^{N} \nonumber\\
-    &\emph{cost function}&&L(\mathbf{w}) = \frac{1}{2N}\sum_{i=1}^N{\left(y_i - t_i\right)}&&with\ \gamma = \frac{1}{2\beta^2}\ and\ t_i=e^{-\gamma\lambda_i^2}\nonumber\\
-    &\emph{gradient}&&\Delta w_k = \frac{\partial{L(\mathbf{w})}}{\partial{w_k}} =\eta\gamma\alpha\sum_{i=1}^N x_{i, k} y_i(1-y_i)\left(y_i - t_i\right) \nonumber
+	%
+    %
+	& \emph{dataset} &&
+    \mathbf{X} = \left\{\mathbf{x}^T_0, 
+    \dots\mathbf{x}^T_n \dots\mathbf{x}^T_N\right\}^T &&
+    \in \mathbb{R}^{N\times K} \nonumber\\
+    %
+    %
+    & \emph{target} && 
+    \boldsymbol{\lambda} = \left\{\lambda_0, \dots\lambda_n, \dots 
+    \lambda_N\right\}^T&&\in\mathbb{R}^N \nonumber \\
+    %
+    %
+    & \emph{weights} && 
+    \mathbf{w} = \left\{w_0, \dots w_k, \dots w_K\right\}^T && 
+    \in \mathbb{R}^K\nonumber\\
+    %
+    %
+	& \emph{predictions} && 
+    \mathbf{y} = \frac{1}{1 + e^{-\alpha(x-0.5)}} &&
+    \in \mathbb{R}^{N} \nonumber\\
+    %
+    %
+    & \emph{cost function} && 
+    L(\mathbf{w}) = \frac{1}{2N}\sum_{i=1}^N 
+    {\left(y_i - t_i\right)} && 
+    with\ \gamma = \frac{1}{2\beta^2}\ and\ t_i = 
+    e^{-\gamma\lambda_i^2}\nonumber\\
+    %
+    %
+    & \emph{gradient} && 
+    \Delta w_k = \frac{\partial{L(\mathbf{w})}}
+    {\partial{w_k}} = \eta\gamma\alpha
+    \sum_{i=1}^N x_{i, k} y_i(1-y_i)
+    \left(y_i - t_i\right) \nonumber
 \end{align}
 
 \IncMargin{1em}
@@ -224,36 +389,52 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetAlgorithmName{Code}{Code}{Code}
 
 \DontPrintSemicolon
-\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\mathbf{w}\in\mathbb{R}^{K}$, $\alpha$}    
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, 
+	$\mathbf{w}\in\mathbb{R}^{K}$, $\alpha$}    
 \KwOut{$\mathbf{y}\in\mathbb{R}^{N}$}
 \SetKwFunction{Predict}{Predict}
 \SetKwProg{Fn}{Function}{:}{}
+
 \BlankLine
+
 \BlankLine
+
 \Fn{\Predict{$\mathbf{X}$, $\mathbf{w}$, $\alpha$}}{
-	\BlankLine
-	$\mathbf{y}\leftarrow ({1+exp({-\alpha(\mathbf{X}\mathbf{w}-0.5)}))^{-1}}$\; 
+	
+    \BlankLine
+    
+	$\mathbf{y}\leftarrow ({1+exp({-\alpha(\mathbf{X}
+    \mathbf{w}-0.5)}))^{-1}}$\; 
    	\Return{$\mathbf{y}$}
 }
+
 \BlankLine
 \BlankLine
 \BlankLine
 \BlankLine
 \BlankLine
 \BlankLine
-\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, $\boldsymbol{\lambda}\in\mathbb{R}^{N}$,  $\mathbf{w}\in\mathbb{R}^{K}$, $\eta$, $\alpha$}    
+
+\KwIn{$\mathbf{X}\in\mathbb{R}^{N\times K}$, 
+	$\boldsymbol{\lambda}\in\mathbb{R}^{N}$, 
+    $\mathbf{w}\in\mathbb{R}^{K}$, $\eta$, $\alpha$}    
 \KwOut{$\mathbf{w}\in\mathbb{R}^{K}$}
 \SetKwFunction{UpdatePredictor}{UpdatePredictor}
 \SetKwProg{Fn}{Function}{:}{}
 \BlankLine
 \BlankLine
-\Fn{\UpdatePredictor{$\mathbf{X}$, $\boldsymbol{\lambda}$, $\mathbf{w}$, $\eta$, $\alpha$}}{
+\Fn{\UpdatePredictor{$\mathbf{X}$, $\boldsymbol{\lambda}$, 
+	$\mathbf{w}$, $\eta$, $\alpha$}}{
+    
 	\BlankLine
    
-	$\mathbf{y}\leftarrow  \Predict{$\mathbf{X}$,$\mathbf{w}$, $\alpha$}$\;
-    $\mathbf{w}\leftarrow\mathbf{w}+\eta\gamma\alpha\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)\left(y_i -  \lambda_i\right)}$\;
-  
+	$\mathbf{y }\leftarrow \Predict{$\mathbf{X}$,$\mathbf{w}$, $\alpha$}$\;
+    $\mathbf{w} \leftarrow \mathbf{w} + \eta\gamma\alpha
+    	\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)
+        \left(y_i -  \lambda_i\right)}$
      
+	\BlankLine  
+
    	\Return{$\mathbf{w}$}
 }
 \caption{Predictor spreading and updating}\label{pred}
@@ -275,12 +456,13 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{A}{Actions}    
 \SetKwInOut{G}{Goals}    
 \SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
-\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{K}{Clusters in the encoding space}    
 \SetKwInOut{N}{Number of samples}    
-\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{B}{Amplitude of the output grid radial bases \ \ \ \ \ \ }    
+\SetKwInOut{KK}{Amplitude of the prediction radial bases \ \ \ \ \ \ }    
 \SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
-\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
-\SetKwInOut{Rho}{amplitude reward region\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
 \SetKwFunction{Int}{Interp}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
@@ -299,7 +481,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \N{$N$}
 \K{$K$}
 \AA{$\alpha$}
-\B{$\beta$}
+\KK{$\beta$}
 \Nu{$\nu$}
 \Rho{$\rho$}
 
@@ -309,32 +491,38 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
     \BlankLine
     
-    
     $\mathbf{c}\in\mathbb{R}^{K}$\;
     \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
-    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$\;
+        $\mathbf{\Psi_{pred}}\leftarrow\Int{$\mathbf{c}$, 
+        	$K$, $K$, $\beta$}$\;
+
     \BlankLine
     
  	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
     	
         \BlankLine
         \tcp{Get current prediction and uncertainty}
-        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{pred}}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}\leftarrow 1-\boldsymbol{\xi}$\;
 		
     	\BlankLine
 		
         \tcp{Generate goals and actions}
-    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\omega}$, $\beta$}\;  
-        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+    	$\mathbf{p_g}, \mathbf{a},\mathbf{G}\leftarrow$\,
+        	\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, 
+            $\boldsymbol{\omega}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
-        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
-        $\mathbf{S}\leftarrow\mathbf{A}$\;
+        $\mathbf{a}\leftarrow\mathbf{a} + \mathcal{N}(\mathbf{0}, 
+        	\nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{s}\leftarrow\mathbf{s}$\;
 
     	\BlankLine
 	
         \tcp{Compute match events}
-        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        $\mathbf{E}\leftarrow\Int{$\mathbf{s}$, $M$, $K$, $\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
         	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
         }
@@ -343,9 +531,12 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         \BlankLine
         
         \tcp{Update weights}
-        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, z$\eta$, $\alpha$}$\;
+        $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{w}_p\,\leftarrow\,\UpdatePredictor{$\mathbf{G}$, 
+        	$\mathbf{m}$, $\mathbf{w}$, z$\eta$, $\alpha$}$\;
 
     	\BlankLine
 	
@@ -371,11 +562,13 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{A}{Actions}    
 \SetKwInOut{G}{Goals}    
 \SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
-\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{K}{Clusters in the encoding space}    
 \SetKwInOut{N}{Number of samples}    
-\SetKwInOut{B}{amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{B}{Amplitude of the output grid radial bases \ \ \ \ \ \ }    
+\SetKwInOut{KK}{Amplitude of the prediction radial bases \ \ \ \ \ \ }    
 \SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
-\SetKwInOut{Nu}{amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
 \SetKwFunction{Int}{Interp}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
@@ -394,8 +587,10 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \N{$N$}
 \K{$K$}
 \AA{$\alpha$}
-\B{$\beta$}
+\B{$\kappa$}
+\KK{$\beta$}
 \Nu{$\nu$}
+\Rho{$\rho$}
 
 \BlankLine
 
@@ -405,7 +600,10 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     
     $\mathbf{c}\in\mathbb{R}^{K}$\;
     \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
-	$\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
+	$\mathbf{\Psi_{pred}}\leftarrow\Int{$\mathbf{c}$, 
+    	$K$, $K$, $\beta$}$\;
+    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, 
+    	$K$, $K$, $\kappa$}$
 
     \BlankLine
     
@@ -419,28 +617,36 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
        \BlankLine
         
         \tcp{Get current prediction and uncertainty}
-        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{pred}}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
          $\boldsymbol{\omega}\leftarrow 1 - \boldsymbol{\xi}$\;
 
         \BlankLine
       
         \tcp{Compute moving average of prediction inprovement}
-        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
+        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + 
+        	\left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - 
+            \boldsymbol{\xi_{pred}}\right]^{+}$\;
         $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
                 
         \BlankLine
          
         \tcp{Generate goals and actions based on prediction improvement }
-    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
-        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,
+        	\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$,
+            	$\boldsymbol{\psi_{}}_{i_{\xi}}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
-        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
-        $\mathbf{S}\leftarrow\mathbf{A}$\;
+        $\mathbf{a}\leftarrow\mathbf{a} + \mathcal{N}(\mathbf{0}, 
+        	\nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{s}\leftarrow\mathbf{a}$\;
         
         \BlankLine
          
         \tcp{Compute match events}
-        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        $\mathbf{E}\leftarrow\Int{$\mathbf{s}$, $M$, $K$, 
+        	$\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
         	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
         }
@@ -449,9 +655,12 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         \BlankLine
         
         \tcp{Update weights}
-        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
-        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
-        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
+        $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, 
+        	$\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
         \BlankLine
         
@@ -467,7 +676,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \DecMargin{1em}
 
 \pagebreak
-\section*{Using SOMs to find sensorimotor contingencies (improvement + march-dependent version).}
+\section*{Using SOMs to find sensorimotor contingencies (improvement + reward version).}
 
 \IncMargin{1em}
 \begin{algorithm}[H]
@@ -481,12 +690,14 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{A}{Actions}    
 \SetKwInOut{G}{Goals}    
 \SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
-\SetKwInOut{K}{clusters in the encoding space}    
+\SetKwInOut{K}{Clusters in the encoding space}    
 \SetKwInOut{N}{Number of samples}    
-\SetKwInOut{B}{Amplitude of the interpolation radial bases \ \ \ \ \ \ }    
+\SetKwInOut{B}{Amplitude of the output grid radial bases \ \ \ \ \ \ }    
 \SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
+\SetKwInOut{KK}{Amplitude of the prediction radial bases \ \ \ \ \ \ }    
 \SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
 \SetKwInOut{Thm}{Threshold of the reward region\ \ \ \ \ \ }    
+\SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
 \SetKwFunction{Int}{Interp}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
@@ -505,8 +716,10 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \N{$N$}
 \K{$K$}
 \AA{$\alpha$}
-\B{$\beta$}
+\B{$\kappa$}
+\KK{$\beta$}
 \Nu{$\nu$}
+\Rho{$\rho$}
 \Thm{$th_{m}$}
 
 \BlankLine
@@ -517,13 +730,15 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     
     $\mathbf{c}\in\mathbb{R}^{K}$\;
     \lFor{$i=1$ \KwTo $K$}{$c_i\leftarrow i$}
-	$\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, $K$, $K$, $\beta$}$
-
+	$\mathbf{\Psi_{pred}}\leftarrow\Int{$\mathbf{c}$, 
+    	$K$, $K$, $\beta$}$\;
+    $\mathbf{\Psi_{grid}}\leftarrow\Int{$\mathbf{c}$, 
+    	$K$, $K$, $\kappa$}$
     \BlankLine
     
     $\boldsymbol{\mu_{\xi}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$\;
     $\boldsymbol{\xi_{pred}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$
-
+    
     \BlankLine
        
 	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
@@ -531,30 +746,37 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
        \BlankLine
         
         \tcp{Get current uncertainty and prediction}
-        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{grid}}$, $\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{pred}}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}\leftarrow 1 - \boldsymbol{\xi}$\;
 
         \BlankLine
         
         \tcp{Compute moving average of prediction improvement}
-        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + \left(1-\alpha\right) + \alpha\left[\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
+        $\boldsymbol{\mu_{\xi}}\leftarrow\boldsymbol{\mu_{\xi}} + 
+        	\left(1-\alpha\right) + \alpha\left
+            [\boldsymbol{\xi} - \boldsymbol{\xi_{pred}}\right]^{+}$\;
         $i_{\xi} \leftarrow \argmax\,\boldsymbol{\mu_{\xi}}$\;
                 
         \BlankLine
               
         \tcp{Generate goals and actions based on prediction improvement}
-    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
-        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, $\mathbf{w}_p$, $\alpha$}$\;
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,
+        	\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, 
+            $\boldsymbol{\psi_{grid}}_{i_{\xi}}$, $\beta$}\;  
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
         $\boldsymbol{\omega}_{g}\leftarrow 1 - \boldsymbol{\xi}_{g}$\;
-        $\mathbf{A}\leftarrow\mathbf{A} + \mathcal{N}(\mathbf{0}, \nu\boldsymbol{\omega}_{g})$\; 
-        $\mathbf{S}\leftarrow\mathbf{A}$\;
+        $\mathbf{a}\leftarrow\mathbf{a} + \mathcal{N}(\mathbf{0},
+        	\nu\boldsymbol{\omega}_{g})$\; 
+        $\mathbf{s}\leftarrow\mathbf{a}$\;
         
         \BlankLine
              
         \tcp{Compute match events and match-based rewards}
-        $\mathbf{E}\leftarrow\Int{$\mathbf{sout}$, $M$, $K$, $\beta$}$\;
+        $\mathbf{E}\leftarrow\Int{$\mathbf{s}$, $M$, $K$, $\beta$}$\;
         \lFor{$i=1$ \KwTo $N$}{
-        $\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
         }
 		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
 		$\mathbf{r} \leftarrow  \begin{cases}
@@ -565,18 +787,23 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         \BlankLine
         
         \tcp{Update weights}
-        $\mathbf{W}_e,\mathbf{sout}\leftarrow$\,\UpdateMSOM{$\mathbf{S}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega\odot\mathbf{r}}$, $\eta$}\;
-        $\mathbf{W}_m,\mathbf{mout}\leftarrow$\,\UpdateMSOM{$\mathbf{A}$, $\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}\odot\mathbf{r}$, $\eta$}\;       
-        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, $\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
+        $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega\odot\mathbf{r}}$,
+            $\eta$}\;
+        $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
+        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}\odot\mathbf{r}$, 
+            $\eta$}\;       
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, 
+        	$\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
         \BlankLine
         
         \tcp{Storage}
         $\boldsymbol{\xi_{pred}} \leftarrow \boldsymbol{\xi}$
                                     
-        \BlankLine
-             
-    }
+        \BlankLine            
+
+	}
 }
 \caption{The SOMSMC algorithm}\label{smc3}
 \end{algorithm}
