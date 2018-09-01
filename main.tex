@@ -150,18 +150,16 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     \in \mathbb{R}^{K \times M} \nonumber\\
     %
     %
- 	& \emph{winners} &&  
-    r_{n} = \argmin_k  || 
-    \mathbf{x}_n - \mathbf{w}_k || && \nonumber\\
+ 	& \emph{distances} &&  
+    \mathbf{R}\in\{\mathbb{R}^{N\times K} | r_{n, k} =  || \mathbf{x}_n - \mathbf{w}_k ||\} && \nonumber\\
     %
     %
     & \emph{modulation} && 
-    \boldsymbol{\xi} \in \mathbb{R}^{K}, \ 
-    \overline{\xi} = \frac{\sum_k \xi_k}{K} && \nonumber\\
+    \boldsymbol{\xi} \in \mathbb{R}^{K} && \nonumber\\
     %
     %
     & \emph{radial bases for neighborhood} && 
-    {\phi}_{k,n} = \overline{\xi}\, e^{{-\gamma (k- r_{n})^2}} && 
+    {\phi}_{k,n} = e^{{-\gamma (k- r_{n})^2}} && 
     with\ \gamma = \frac{1}{2{\xi_k}^2} \nonumber\\
     %
     %
@@ -204,16 +202,12 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 	$\boldsymbol{\gamma} \leftarrow \frac{1}{2\boldsymbol{\xi}^2}$
     \tcp*[r]{Extension of the neighborhood}
     
-    $\overline{\xi} = \frac{\sum_k \xi_k}{K}$
-    \tcp*[r]{Modulation mean}\;
-    
     \For{$n\leftarrow0$ \KwTo {$N$}}{
     	$r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$
         \tcp*[r]{Winning prototype}
         
         \For{$k\leftarrow1$ \KwTo {$K$}}{
-        	$\phi_{k, n}\leftarrow \overline{\xi}\, 
-            exp(\gamma_k(k - r_{n})^2)$
+        	$\phi_{k, n}\leftarrow  exp(\gamma_k(k - r_{n})^2)$
             \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
             Radial bases of distances from winner}}
         
