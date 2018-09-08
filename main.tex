@@ -190,7 +190,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
 \BlankLine
 
-\Fn{\UpdateMSOM{$\mathbf{X}$, $\mathbf{W}$, $M$, 
+\Fn{\UpdateMSOM{$\mathbf{X}$, $\mathbf{W}$,
 	$K$, $\boldsymbol{\xi}$, $\eta$}}{
 
 	\BlankLine
@@ -526,9 +526,9 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         
         \tcp{Update weights}
         $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{w}_p\,\leftarrow\,\UpdatePredictor{$\mathbf{G}$, 
         	$\mathbf{m}$, $\mathbf{w}$, z$\eta$, $\alpha$}$\;
 
@@ -650,9 +650,9 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         
         \tcp{Update weights}
         $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega}$, $\eta$}\;
         $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega}$, $\eta$}\;       
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, 
         	$\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
                             
@@ -782,10 +782,10 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
         
         \tcp{Update weights}
         $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega\odot\mathbf{r}}$,
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega\odot\mathbf{r}}$,
             $\eta$}\;
         $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
-        	$\mathbf{W}_e$, $M$, $K$, $\boldsymbol{\omega}\odot\mathbf{r}$, 
+        	$\mathbf{W}_e$, $K$, $\boldsymbol{\omega}\odot\mathbf{r}$, 
             $\eta$}\;       
         $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, 
         	$\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
