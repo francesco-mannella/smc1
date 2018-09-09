@@ -203,11 +203,12 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     \tcp*[r]{Extension of the neighborhood}
     
     \For{$n\leftarrow0$ \KwTo {$N$}}{
-    	$r_{n}\leftarrow \argmin_k ||\mathbf{x}_n - \mathbf{w}_k||$
-        \tcp*[r]{Winning prototype}
-        
+
         \For{$k\leftarrow1$ \KwTo {$K$}}{
-        	$\phi_{k, n}\leftarrow  exp(\gamma_k(k - r_{n})^2)$
+            $r_{n, k}\leftarrow ||\mathbf{x}_n - \mathbf{w}_k||$
+            \tcp*[r]{Distance from the current prototype}
+        
+        	$\phi_{k, n}\leftarrow  exp(\gamma_k(k - r_{n, k})^2)$
             \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
             Radial bases of distances from winner}}
         
@@ -265,27 +266,34 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 
 \SetKwProg{Fn}{Function}{:}{}
 
-\KwIn{$\mathbf{x}\in\mathbb{R}^{N}$, $K$, $N$, $\beta$}    
+\KwIn{$\mathbf{x}\in\mathbb{R}^{N}$, $K$, $N$, $\beta$, $z\in\{0, 1\}$}    
 \KwOut{$\boldsymbol{\Psi}(\mathbf{x})\in\mathbb{R}^{K\times N}$}
-\SetKwFunction{Int}{Interp}
+\SetKwFunction{Int}{RadialBases}
 
 \BlankLine
 
 \BlankLine
 
-\Fn{\Int{$\mathbf{x}$, $K$, $N$, $\beta$}}{
+\Fn{\Int{$\mathbf{x}$, $K$, $N$, $\beta$, $z$}}{
  	\BlankLine
     \For{$k=1$ \KwTo {K}}{
     	\For{$i=1$ \KwTo {N}}{
- 	    	$\psi_{k, i}(x_i) \leftarrow (\beta\sqrt{2\pi})^{-1}
-        	exp{\left(-(0.5((k - x_i) \beta^{-1})^2\right)}$
-        \tcp*[f]{Radial bases}
+    	    \tcp{Radial bases}
+ 	    	$\psi_{k, i}\left(x_i\right) \leftarrow 
+        	exp\left(-0.5\left(
+        	\left(k - x_i\right) 
+        	\beta^{-1}\right)^2\right)$\\
+        	\tcp{Normalized radial bases}
+            \If{$z==True$}{ 
+                $\psi_{k, i}\left(x_i\right) \leftarrow \left(\beta\sqrt{2\pi}\right)^{-1}\psi_{k, i}$
+            }
+        
      	}
   	}
     \Return{$\boldsymbol{\Psi(\mathbf{x})}$}
 }
-
-\caption{Interpolation from points in the output space to output-unit activations}\label{interp}
+ 
+\caption{Radial basis functions of the elements of $\mathbf{x}$, points in the $\mathbb{R}^{N}$ space, on a $\left\{1\dots K\right\}$ grid in the $\mathbb{R}^{K}$ space}\label{RadialBases}
 
 \end{algorithm}
 \DecMargin{1em}
@@ -313,19 +321,18 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 	$\boldsymbol{\xi}$, $\beta$}}{
 	\BlankLine
    
-   	\lFor{$n=1$ \KwTo {N}}{
+    \tcp{Sampling}
+   	\For{$n=1$ \KwTo {N}}{
     	$s_n\sim p(y|\boldsymbol{\xi})$
-        \tcp*[f]{Sampling}
 	}
-   
+	
+    \tcp{Radial bases of the samples in the output space}
    	$\boldsymbol{\Psi(\mathbf{s})} \leftarrow 
-    \Int{$\mathbf{s}$, $K$, $N$, $\beta$}$
-    \tcp*[r]{\parbox[t]{2.2in}{\raggedleft 
-    Interpolating samples to get MSOM outputs}}
-   
+    \Int{$\mathbf{s}$, $K$, $N$, $\beta$, $1$}$
+  
+    \tcp{Back-propagate to the input space}
    	$\boldsymbol{X}_{gen} \leftarrow 
     \left(\mathbf{W}^T\boldsymbol{\Psi}\right)^T$
-    \tcp*[r]{Back-propagate to the input space}
    
    	\BlankLine
     
@@ -373,7 +380,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
     %
     & \emph{gradient} && 
     \Delta w_k = \frac{\partial{L(\mathbf{w})}}
-    {\partial{w_k}} = \eta\gamma\alpha
+    {\partial{w_k}} = \eta\alpha
     \sum_{i=1}^N x_{i, k} y_i(1-y_i)
     \left(y_i - t_i\right) \nonumber
 \end{align}
@@ -423,7 +430,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 	\BlankLine
    
 	$\mathbf{y }\leftarrow \Predict{$\mathbf{X}$,$\mathbf{w}$, $\alpha$}$\;
-    $\mathbf{w} \leftarrow \mathbf{w} + \eta\gamma\alpha
+    $\mathbf{w} \leftarrow \mathbf{w} + \eta\alpha
     	\sum_{i=1}^N{\mathbf{x_i}y_i(1-y_i)
         \left(y_i -  \lambda_i\right)}$
      
@@ -458,7 +465,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
 \SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
-\SetKwFunction{Int}{Interp}
+\SetKwFunction{Int}{RadialBases}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
 \SetKwFunction{UpdateMSOM}{UpdateMSOM}
 \SetKwFunction{UpdatePredictor}{UpdatePredictor}
@@ -564,7 +571,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
 \SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
-\SetKwFunction{Int}{Interp}
+\SetKwFunction{Int}{RadialBases}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
 \SetKwFunction{UpdateMSOM}{UpdateMSOM}
 \SetKwFunction{UpdatePredictor}{UpdatePredictor}
@@ -693,7 +700,7 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \SetKwInOut{Thm}{Threshold of the reward region\ \ \ \ \ \ }    
 \SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
 
-\SetKwFunction{Int}{Interp}
+\SetKwFunction{Int}{RadialBases}
 \SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
 \SetKwFunction{UpdateMSOM}{UpdateMSOM}
 \SetKwFunction{UpdatePredictor}{UpdatePredictor}
@@ -802,5 +809,134 @@ Thus SOM Optimization is based on a specialization of the k-means cost function.
 \caption{The SOMSMC algorithm}\label{smc3}
 \end{algorithm}
 \DecMargin{1em}
+
+\pagebreak
+\section*{Using SOMs to find sensorimotor contingencies (incompetence + reward).}
+
+\IncMargin{1em}
+\begin{algorithm}[H]
+\SetAlgorithmName{Code}{Code}{Code}
+
+\DontPrintSemicolon\SetKwInOut{Encoding}{Encoding weights}    
+\SetKwInOut{Motor}{Motor-control weights}    
+\SetKwInOut{Pred}{Prediction weights}    
+\SetKwInOut{Comp}{Competence levels}    
+\SetKwInOut{S}{States}    
+\SetKwInOut{A}{Actions}    
+\SetKwInOut{G}{Goals}    
+\SetKwInOut{M}{Dimensions in sensory/motor space\ \ \ \ \ \ }    
+\SetKwInOut{K}{Clusters in the encoding space}    
+\SetKwInOut{N}{Number of samples}    
+\SetKwInOut{B}{Amplitude of the output grid radial bases \ \ \ \ \ \ }    
+\SetKwInOut{AA}{Temperature of the prediction function\ \ \ \ \ \ }    
+\SetKwInOut{KK}{Amplitude of the prediction radial bases \ \ \ \ \ \ }    
+\SetKwInOut{Nu}{Amplitude of the motor exploration\ \ \ \ \ \ }    
+\SetKwInOut{Thm}{Threshold of the reward region\ \ \ \ \ \ }    
+\SetKwInOut{Rho}{Amplitude of the match region\ \ \ \ \ \ }    
+
+\SetKwFunction{Int}{RadialBases}
+\SetKwFunction{GenerateFromMSOM}{GenerateFromMSOM}
+\SetKwFunction{UpdateMSOM}{UpdateMSOM}
+\SetKwFunction{UpdatePredictor}{UpdatePredictor}
+\SetKwFunction{Predict}{Predict}
+
+\Encoding{$\mathbf{W}_e\in\mathbb{R}^{K\times M}$}
+\Motor{$\mathbf{W}_m\in\mathbb{R}^{K\times M}$}
+\Pred{$\mathbf{w}_p\in\mathbb{R}^{K}$}
+\Comp{$\boldsymbol{\xi}\in\mathbb{R}^{K}$}
+\A{$\mathbf{A}\in\mathbb{R}^{N\times M}$}
+\S{$\mathbf{S}\in\mathbb{R}^{N\times M}$}
+\G{$\mathbf{g}\in\mathbb{R}^{N}$}
+\M{$M$}
+\N{$N$}
+\K{$K$}
+\AA{$\alpha$}
+\B{$\kappa$}
+\KK{$\beta$}
+\Nu{$\nu$}
+\Rho{$\rho$}
+\Thm{$th_{m}$}
+
+\BlankLine
+
+\Begin{
+
+    \BlankLine
+    
+    \tcp{Build a grid of possible output activations \\to record the current prediction surface}
+    $\mathbf{c}\in\{1\dots K\}$\;
+	$\mathbf{\Psi_{pred}}\leftarrow\Int{$\mathbf{c}$, 
+    	$K$, $K$, $\beta$}$\;
+ 
+    \BlankLine
+    \tcp{Initialize the prediction surface}
+    $\boldsymbol{\xi_{pred}} \leftarrow \mathbf{0} \in\mathbb{R}^{K}$
+    
+    \BlankLine
+       
+	\Repeat{$\frac{1}{K}\sum_{i=1}^K\boldsymbol{\xi} = 1$ }{
+       
+       \BlankLine
+        
+        \tcp{Get current prediction and uncertainty}
+        $\boldsymbol{\xi}\leftarrow\Predict{$\mathbf{\Psi_{pred}}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
+        $\boldsymbol{\omega}\leftarrow exp\left(-\gamma\boldsymbol{\xi}\right)$\;
+
+                
+        \BlankLine
+              
+        \tcp{Generate goals and actions based on current uncertainty}
+    	$\mathbf{p_g}, \mathbf{A},\mathbf{G}\leftarrow$\,
+        	\GenerateFromMSOM{$\mathbf{W}_m$, $K$, $N$, 
+            $\boldsymbol{\omega}$, $\beta$}\;
+        \tcp{Compute prediction about the generated goals}    
+        $\boldsymbol{\xi}_{g}\leftarrow\Predict{$\mathbf{G}$, 
+        	$\mathbf{w}_p$, $\alpha$}$\;
+        \tcp{Compute the relative incertainty}    
+        $\boldsymbol{\omega}_{g}\leftarrow exp\left(-\gamma\boldsymbol{\xi_g}\right)$\;
+        \tcp{Add gaussian noise to the generated action \\based on uncertainty}
+        $\mathbf{a}\leftarrow\mathbf{a} + \mathcal{N}(\mathbf{0},
+        	\nu\overline{\boldsymbol{\xi}}\boldsymbol{\omega}_{g})$\; 
+        \tcp{In the current abstraction the motor space \\and the sensory space are equivalent}
+        $\mathbf{s}\leftarrow\mathbf{a}$\;
+        
+        \BlankLine
+             
+        \tcp{Compute the representations of sensory events\\ in the output space}
+        $\mathbf{E}\leftarrow\Int{$\mathbf{s}$, $M$, $K$, $\beta$}$\;
+        \tcp{Distances between sensory event representations and goal representations}
+        \For{$i=1$ \KwTo $N$}{
+        	$\chi_i\leftarrow||\mathbf{g}_i - \mathbf{e}_i||$
+        }
+        \tcp{The match is the radial basis of the distance}
+		$\mathbf{m} \leftarrow exp(-0.5(\boldsymbol{\chi}\rho^{-1})^2)$\;
+
+                   
+        \BlankLine
+        
+        \tcp{Update weights}
+        $\mathbf{W}_e\,\leftarrow$\,\UpdateMSOM{$\mathbf{s}$, 
+        	$\mathbf{W}_e$, $K$, $(1-\boldsymbol{\omega})\odot\mathbf{m}$,
+            $\eta$}\;
+        $\mathbf{W}_m\,\leftarrow$\,\UpdateMSOM{$\mathbf{a}$, 
+        	$\mathbf{W}_e$, $K$, $(1-\boldsymbol{\omega})\odot\mathbf{m}$, 
+            $\eta$}\;       
+        $\mathbf{w}_p\leftarrow\UpdatePredictor{$\mathbf{G}$, 
+        	$\mathbf{m}$, $\mathbf{w}$, $\eta$, $\alpha$}$\;
+                            
+        \BlankLine
+        
+        \tcp{Storage}
+        $\boldsymbol{\xi_{pred}} \leftarrow \boldsymbol{\xi}$
+                                    
+        \BlankLine            
+
+	}
+}
+\caption{The SOMSMC algorithm}\label{smc3}
+\end{algorithm}
+\DecMargin{1em}
+
 
 \end{document}
